@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import './widgets/new_transaction.dart';
 import './widgets/transacion_list.dart';
+import './widgets/chart.dart';
 import './models/transaction.dart';
 
 void main() => runApp(MyApp());
@@ -13,12 +14,14 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
           primarySwatch: Colors.green,
           accentColor: Colors.amber,
+          errorColor: Colors.red,
           fontFamily: "Quicksand",
           textTheme: ThemeData.light().textTheme.copyWith(
                 headline6: const TextStyle(
                     fontFamily: "OpenSans",
                     fontSize: 18,
                     fontWeight: FontWeight.bold),
+                button: TextStyle(color: Colors.white),
               ),
           appBarTheme: const AppBarTheme(
             titleTextStyle: TextStyle(
@@ -56,12 +59,24 @@ class _MyHomePageState extends State<MyHomePage> {
     //   date: DateTime.now(),
     // ),
   ];
-  void _addNewTransaction(String txTitle, double txAmount) {
+
+  List<Transaction> get _recentTransactions {
+    return _userTransactions.where((tx) {
+      return tx.date.isAfter(
+        DateTime.now().subtract(
+          Duration(days: 7),
+        ),
+      );
+    }).toList();
+  }
+
+  void _addNewTransaction(
+      String txTitle, double txAmount, DateTime selectedDate) {
     final newTx = Transaction(
         id: DateTime.now().toString(),
         title: txTitle,
         amount: txAmount,
-        date: DateTime.now());
+        date: selectedDate);
 
     setState(() {
       _userTransactions.add(newTx);
@@ -79,6 +94,14 @@ class _MyHomePageState extends State<MyHomePage> {
         );
       },
     );
+  }
+
+  void _deleteTransaction(String id) {
+    setState(() {
+      _userTransactions.removeWhere((tx) {
+        return tx.id == id;
+      });
+    });
   }
 
   @override
@@ -105,7 +128,8 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               elevation: 5,
             ),
-            TransactionList(_userTransactions),
+            Chart(_recentTransactions),
+            TransactionList(_userTransactions, _deleteTransaction),
             // Card(
             //   color: Colors.red,
             //   child: Text("Second"),
